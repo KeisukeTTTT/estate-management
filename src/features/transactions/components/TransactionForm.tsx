@@ -57,7 +57,6 @@ export default function TransactionForm({ serverAction, contracts, initialData }
         control,
         handleSubmit,
         formState: { errors, isSubmitting },
-        reset,
     } = useForm<TransactionFormValues>({
         resolver: zodResolver(transactionFormSchema),
         defaultValues: {

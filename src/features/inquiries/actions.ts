@@ -1,25 +1,21 @@
 // src/features/inquiries/actions.ts
 'use server';
 
-import { z } from 'zod';
-import { revalidatePath } from 'next/cache';
 import prisma from '@/lib/prisma';
-import { inquiryFormSchema } from './types';
 import { InquiryStatus } from '@prisma/client'; // デフォルトステータス用
+import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { z } from 'zod';
+import { inquiryFormSchema } from './types';
 
 export type InquiryFormState = {
     success: boolean;
     message: string;
-    errors?: Record<keyof z.infer<typeof inquiryFormSchema>, string[] | undefined>
-           | Record<string, string[] | undefined>;
+    errors?: Record<keyof z.infer<typeof inquiryFormSchema>, string[] | undefined> | Record<string, string[] | undefined>;
 };
 
 // 問い合わせ作成アクション
-export async function createInquiry(
-    prevState: InquiryFormState | null,
-    formData: FormData
-): Promise<InquiryFormState> {
+export async function createInquiry(prevState: InquiryFormState | null, formData: FormData): Promise<InquiryFormState> {
     const validatedFields = inquiryFormSchema.safeParse({
         contactName: formData.get('contactName'),
         contactInfo: formData.get('contactInfo'),
@@ -29,7 +25,7 @@ export async function createInquiry(
     });
 
     if (!validatedFields.success) {
-         console.error('Validation Error:', validatedFields.error.flatten().fieldErrors);
+        console.error('Validation Error:', validatedFields.error.flatten().fieldErrors);
         return {
             success: false,
             message: '入力内容にエラーがあります。',

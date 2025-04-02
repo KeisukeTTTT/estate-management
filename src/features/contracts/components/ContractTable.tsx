@@ -1,24 +1,22 @@
 // src/features/contracts/components/ContractTable.tsx
 'use client';
 
-import * as React from 'react';
 // 関連データを含む型を定義 (Prisma の include を想定)
-import { Contract, Contractor, Room, Property, ContractStatus } from '@prisma/client';
+import DeleteIcon from '@mui/icons-material/Delete';
+import VisibilityIcon from '@mui/icons-material/Visibility'; // 詳細表示用
+import Chip from '@mui/material/Chip'; // ステータス表示用
+import IconButton from '@mui/material/IconButton';
+import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-import IconButton from '@mui/material/IconButton';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import VisibilityIcon from '@mui/icons-material/Visibility'; // 詳細表示用
 import Tooltip from '@mui/material/Tooltip';
-import Link from 'next/link';
+import { Contract, Contractor, ContractStatus, Property, Room } from '@prisma/client';
 import { format } from 'date-fns';
-import Chip from '@mui/material/Chip'; // ステータス表示用
+import Link from 'next/link';
 
 // 関連データを含んだ契約の型
 type ContractWithRelations = Contract & {

@@ -11,7 +11,7 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import { useRouter } from 'next/navigation';
 import { useActionState, useEffect } from 'react';
-import { useForm } from 'react-hook-form'; // useFormState を追加
+import { Resolver, useForm } from 'react-hook-form'; // useFormState を追加
 import { ContractorFormState } from '../actions'; // State 型をインポート
 import { contractorFormSchema, ContractorFormValues } from '../types';
 
@@ -32,9 +32,8 @@ export default function ContractorForm({ serverAction, initialData }: Contractor
         handleSubmit,
         formState: { errors, isSubmitting }, // RHF の isSubmitting を使用
         reset, // フォームリセット用
-        control // Controller の代わりに register でも可 (Checkboxは少し面倒かも)
     } = useForm<ContractorFormValues>({
-        resolver: zodResolver(contractorFormSchema),
+        resolver: zodResolver(contractorFormSchema) as Resolver<ContractorFormValues>,
         defaultValues: initialData || {
             name: '',
             contact: '',

@@ -36,7 +36,6 @@ export default function InquiryForm({ serverAction, contractors, initialData }: 
         control,
         handleSubmit,
         formState: { errors, isSubmitting }, // useForm の isSubmitting を使う
-        reset,
     } = useForm<InquiryFormValues>({
         resolver: zodResolver(inquiryFormSchema),
         defaultValues: initialData || {

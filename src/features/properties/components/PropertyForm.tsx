@@ -23,7 +23,7 @@ const propertyTypeLabels: Record<PropertyType, string> = {
 };
 
 interface PropertyFormProps {
-    onSubmit: (data: FormData) => Promise<any>; // Server Action を受け取る
+    onSubmit: (data: FormData) => Promise<{success: boolean, message: string}>; // Server Action を受け取る
     initialData?: PropertyFormValues; // 編集時に初期値を渡す (今回は新規作成のみ)
     isSubmitting?: boolean; // 送信中の状態 (useFormState を使う場合に便利)
 }
