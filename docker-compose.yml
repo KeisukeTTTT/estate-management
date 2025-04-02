@@ -1,0 +1,18 @@
+# docker-compose.yml
+version: '3.8'
+services:
+    db:
+        image: postgres:15 # 好みのPostgreSQLバージョンを指定
+        container_name: cosmobank_db # コンテナ名（任意）
+        restart: always
+        environment:
+            POSTGRES_USER: user # データベースのユーザー名（任意）
+            POSTGRES_PASSWORD: password # データベースのパスワード（任意）
+            POSTGRES_DB: cosmobank # データベース名（任意）
+        ports:
+            - '5432:5432' # ローカルPCの5432番ポートをコンテナの5432番ポートに接続
+        volumes:
+            - postgres_data:/var/lib/postgresql/data # DBデータを永続化
+
+volumes:
+    postgres_data: # 名前付きボリューム定義

@@ -1,0 +1,172 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 物件情報
+model Property {
+  id        String       @id @default(cuid())
+  name      String // 物件名 (例: ABCマンション)
+  address   String // 住所
+  type      PropertyType // 物件種別 (マンション, アパート, 戸建て)
+  rooms     Room[] // この物件に属する部屋/区画
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+enum PropertyType {
+  MANSION
+  APARTMENT
+  HOUSE
+}
+
+// 部屋/区画情報 (物件内)
+model Room {
+  id            String     @id @default(cuid())
+  propertyId    String // 属する物件ID
+  property      Property   @relation(fields: [propertyId], references: [id])
+  roomNumber    String? // 部屋番号 (例: 101)
+  floor         Int? // 階数
+  layout        String? // 間取り (例: 1LDK)
+  rent          Int? // 家賃 (月額)
+  managementFee Int? // 管理費 (月額)
+  contracts     Contract[] // この部屋に関連する契約
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+// 契約者情報
+model Contractor {
+  id            String     @id @default(cuid())
+  name          String // 契約者名
+  contact       String // 連絡先 (電話番号 or Email)
+  address       String // 契約者の住所
+  isCorporation Boolean    @default(false) // 法人かどうか
+  contracts     Contract[] // この契約者が関わる契約
+  inquiries     Inquiry[] // この契約者からの問い合わせ
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+// 契約情報
+model Contract {
+  id                 String         @id @default(cuid())
+  contractorId       String // 契約者ID
+  contractor         Contractor     @relation(fields: [contractorId], references: [id])
+  roomId             String // 契約対象の部屋/区画ID
+  room               Room           @relation(fields: [roomId], references: [id])
+  startDate          DateTime // 契約開始日
+  endDate            DateTime // 契約終了日
+  rent               Int // 契約時の家賃
+  managementFee      Int // 契約時の管理費
+  deposit            Int? // 敷金
+  keyMoney           Int? // 礼金
+  status             ContractStatus @default(ACTIVE) // 契約ステータス
+  renewalDueDate     DateTime? // 次回更新期日
+  terminationDate    DateTime? // 解約日
+  restorationDetails String? // 原状回復に関する詳細
+  progress           Progress[]     @relation("ContractProgress")
+  transactions       Transaction[] // この契約に関する入出金
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+}
+
+enum ContractStatus {
+  ACTIVE // 契約中
+  UPCOMING // 契約開始前
+  RENEWAL // 更新手続き中
+  TERMINATING // 解約手続き中
+  TERMINATED // 解約済み
+  EXPIRED // 契約期間満了
+}
+
+// 問い合わせ情報
+model Inquiry {
+  id           String        @id @default(cuid())
+  contractorId String? // 問い合わせ元の契約者ID (任意)
+  contractor   Contractor?   @relation(fields: [contractorId], references: [id])
+  contactName  String // 問い合わせ者名 (契約者以外の場合も)
+  contactInfo  String // 連絡先
+  subject      String // 件名
+  details      String // 問い合わせ内容
+  receivedAt   DateTime      @default(now()) // 受付日時
+  status       InquiryStatus @default(RECEIVED) // 対応ステータス
+  assignee     String? // 担当者
+  resolution   String? // 対応結果
+  resolvedAt   DateTime? // 対応完了日時
+  progress     Progress[]    @relation("InquiryProgress")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+enum InquiryStatus {
+  RECEIVED // 受付済み
+  IN_PROGRESS // 対応中
+  RESOLVED // 解決済み
+  CLOSED // クローズ
+}
+
+// 進捗状況 (特定のタスクやプロセスに対する)
+model Progress {
+  id          String         @id @default(cuid())
+  targetType  TargetType // 対象の種類 (契約, 問い合わせなど)
+  targetId    String // 対象のID
+  contract    Contract?      @relation("ContractProgress", fields: [targetId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_progress_contract_target")
+  inquiry     Inquiry?       @relation("InquiryProgress", fields: [targetId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_progress_inquiry_target")
+  stepName    String // ステップ名 (例: 更新案内送付, 解約書類確認)
+  status      ProgressStatus @default(PENDING) // 進捗ステータス
+  notes       String? // 備考
+  dueDate     DateTime? // 期限
+  completedAt DateTime? // 完了日
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+enum TargetType {
+  CONTRACT_RENEWAL
+  CONTRACT_TERMINATION
+  INQUIRY_RESPONSE
+  RESTORATION_CHECK
+  // 他にも必要なプロセスを追加
+}
+
+enum ProgressStatus {
+  PENDING // 未着手
+  IN_PROGRESS // 進行中
+  COMPLETED // 完了
+  ON_HOLD // 保留
+  CANCELLED // 中止
+}
+
+// 入出金情報
+model Transaction {
+  id              String          @id @default(cuid())
+  contractId      String? // 関連する契約ID (任意)
+  contract        Contract?       @relation(fields: [contractId], references: [id])
+  type            TransactionType // 種別 (家賃収入, 敷金預かり, 修繕費支出など)
+  amount          Int // 金額 (収入は正、支出は負)
+  transactionDate DateTime // 取引日
+  description     String? // 内容・摘要
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+enum TransactionType {
+  RENT_INCOME
+  MANAGEMENT_FEE_INCOME
+  DEPOSIT_RECEIVED // 敷金預かり
+  KEY_MONEY_INCOME
+  RENEWAL_FEE_INCOME
+  REPAIR_EXPENSE
+  RESTORATION_EXPENSE
+  DEPOSIT_RETURNED // 敷金返還
+  OTHER_INCOME
+  OTHER_EXPENSE
+}
